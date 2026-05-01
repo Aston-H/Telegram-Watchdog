@@ -1,2 +1,3 @@
-# Telegram-Watchdog
-后台运行一有问题就叫唤
+# 项目方案
+项目名称：Telegram-Watchdog  
+核心功能：基于 Telegram 的告警监控系统，包含消息监听、敏感词检测、告警任务管理、音效播放、命令路由等功能。
