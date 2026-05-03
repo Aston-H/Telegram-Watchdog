@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 async def new_message_handler(event, client, dispatcher: Dispatcher) -> None:
     messageadapter = await TelegramMessageAdapter.from_event(event)
-    if messageadapter.is_self:
-        return
     if event.is_private:
         await private_handler.handle_private_message(messageadapter, dispatcher)
     elif event.is_group:
@@ -20,7 +18,5 @@ async def new_message_handler(event, client, dispatcher: Dispatcher) -> None:
     elif event.is_channel:
         await group_handler.handle_group_message(messageadapter, client, dispatcher)
     else:
-        logger.warning(
-            f"event消息: \n{json.dumps(event.message.__dict__, default=str, ensure_ascii=False)}"
-        )
+        logger.info(f"event消息: \n{json.dumps(event.message.__dict__, default=str, ensure_ascii=False)}")
         logger.warning("未知消息类型，无法处理: %s", event.text)

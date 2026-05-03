@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TelegramMessageAdapter:
     """Telegram 消息适配器"""
-
-    raw_event: events.NewMessage
     message: Message
     text: str
     sender_id: int
@@ -21,29 +19,47 @@ class TelegramMessageAdapter:
     command: Optional[str] = None
     args: Optional[str] = None
     is_self: bool = False
+    user_name: Optional[str] = None
+    chat_name: Optional[str] = None
 
     @classmethod
     async def from_event(cls, event) -> "TelegramMessageAdapter":
         """从 telethon event 创建适配器"""
-        text = event.message.message or ""
+        sender = await event.get_sender()
+        chat = await event.get_chat()
+        logger.debug(f"event 消息: \n{json.dumps(event.message.__dict__, default=str, ensure_ascii=False)}")
+        logger.debug(f"sender消息: \n{json.dumps(sender.__dict__, default=str, ensure_ascii=False)}")
+        logger.debug(f"chat  消息: \n{json.dumps(chat.__dict__, default=str, ensure_ascii=False)}")
 
-        # 解析命令和参数
-        command: bool = False
-        args = None
+
+        sender_id = getattr(sender, "id", None)
+        username = getattr(sender, "username", "")
+        first_name = getattr(sender, "first_name", "")
+        last_name = getattr(sender, "last_name", "")
+        full_name = " ".join(filter(None, [first_name, last_name]))
+        user_name = f"{full_name}（@{username}）" if full_name else f"{sender_id}（@{username}）"
+
+
+        chat_id = getattr(chat, "id", None)
+        chat_title = getattr(chat, "title", "")
+        chat_name = f'{chat_title}（{chat_id}）' if chat_title else f"聊天（{chat_id}）"
+                      
+
+        text = getattr(event.message, "message", "")
         textstrip = text.strip()
-        command, _, args = (
-            textstrip.partition(" ") if textstrip.startswith("/") else (None, "", None)
-        )
+        command, _, args = (textstrip.partition(" ") if textstrip.startswith("/") else (None, "", None))
+
 
         return cls(
-            raw_event=event,
             message=event.message,
             text=text,
-            sender_id=event.sender_id,
+            sender_id=sender_id,
             chat_id=event.chat_id,
             command=command,
             args=args,
             is_self=event.out,
+            user_name=user_name,
+            chat_name=chat_name,
         )
 
     async def reply(self, text: str = "", **kwargs) -> None:

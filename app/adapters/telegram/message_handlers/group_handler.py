@@ -13,13 +13,13 @@ logger = logging.getLogger(__name__)
 
 async def handle_group_message(event, client, dispatcher: Dispatcher) -> None:
     logger.info(
-        "群聊消息 from %s: %s: %s",
-        event.sender_id,
-        event.chat_id,
+        "群聊消息: %s | 发送者: %s | 内容: %s",
+        event.chat_name,
+        event.user_name,
         event.text,
     )
 
     # 敏感词检测
-    if contains_sensitive_word(event.text, setting.sensitive_words_group):
+    if contains_sensitive_word(event.text, setting.sensitive_words_group) and not event.is_self:
         logger.info("检测到敏感词，播放告警音效")
         ALERT_MANAGER.trigger_alert(event)

@@ -17,12 +17,11 @@ SCREENSHOT_USE_CASE = ScreenshotUseCase()
 logger = logging.getLogger(__name__)
 
 
-async def handle_private_message(
-    event: TelegramMessageAdapter, dispatcher: Dispatcher
-) -> None:
+async def handle_private_message(event: TelegramMessageAdapter, dispatcher: Dispatcher) -> None:
     logger.info(
-        "私聊消息 from %s: %s",
-        event.sender_id,
+        "私聊消息: %s | 发送者: %s | 内容: %s",
+        event.chat_name,
+        event.user_name,
         event.text,
     )
 
@@ -31,27 +30,23 @@ async def handle_private_message(
         logger.info("检测到敏感词，播放告警音效")
         if setting.auto_screenshot_switch:
             # 播放告警音效
-            AUDIO_HANDLER.play_audio()
+            AUDIO_HANDLER.play_audio(volume=0.5, loop=1)
             logger.info("自动截图开关已开启，先标记为已读，再执行截图")
             await SCREENSHOT_USE_CASE.execute(event)
         else:
             # 播放告警音乐
-            AUDIO_HANDLER.play_audio(
-                sound_file=setting.alert_sound_file, volume=0.5, loop=1
-            )
+            AUDIO_HANDLER.play_audio(sound_file=setting.alert_sound_file, volume=0.5, loop=1)
         return
 
     if event.command:
         await handle_private_command(dispatcher, event)
 
     # 私聊告警任务
-    if setting.private_alert_switch:
+    if setting.private_alert_switch and not event.is_self:
         ALERT_MANAGER.trigger_alert(event)
 
 
-async def handle_private_command(
-    dispatcher: Dispatcher, event: TelegramMessageAdapter
-) -> None:
+async def handle_private_command(dispatcher: Dispatcher, event: TelegramMessageAdapter) -> None:
     if dispatcher:
         handler = dispatcher.router.resolve(event.command)
         if handler:
