@@ -3,7 +3,7 @@ import sys
 import os
 import logging
 from typing import Optional, Dict
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 from app.adapters.telegram.message_handlers.audio_handler import AUDIO_HANDLER
 

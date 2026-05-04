@@ -7,7 +7,7 @@ import random
 import shutil
 import subprocess
 import tempfile
-from typing import Optional, Tuple
+from typing import Optional
 from app.adapters.telegram.message_handler import TelegramMessageAdapter
 
 logger = logging.getLogger(__name__)

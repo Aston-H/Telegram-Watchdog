@@ -1,6 +1,4 @@
-import asyncio
 import logging
-import random
 
 from app.adapters.telegram.message_handler import TelegramMessageAdapter
 from app.adapters.telegram.message_handlers.alert_event import ALERT_MANAGER

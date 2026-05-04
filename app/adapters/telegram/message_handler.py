@@ -3,7 +3,6 @@ import logging
 
 from dataclasses import dataclass
 from typing import Optional
-from telethon import events
 from telethon.tl.custom.message import Message
 
 logger = logging.getLogger(__name__)
