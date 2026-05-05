@@ -1,6 +1,6 @@
 from telethon import events
-import json
 import logging
+import time
 
 from app.adapters.telegram.client import TelegramClientWrapper
 from app.adapters.telegram.handlers import new_message_handler
@@ -12,31 +12,12 @@ setting = Settings()
 AUDIO_HANDLER = AudioHandler()
 
 
-class NetworkAlertHandler(logging.Handler):
-    """自定义日志处理器，检测网络断开并播放音效"""
-
-    def __init__(self):
-        super().__init__()
-    
-
-    def emit(self, record):
-        if record.levelno >= logging.WARNING:
-            msg = record.getMessage()
-            if "Network is unreachable" in msg or "Can't assign requested address" in msg:
-                AUDIO_HANDLER.play_audio(volume=0.8, loop=1)
-
-
-# 添加自定义日志处理器
-_network_handler = NetworkAlertHandler()
-_network_handler.setLevel(logging.WARNING)
-logging.getLogger("telethon").addHandler(_network_handler)
-
-
 class TelegramEventAdapter:
     def __init__(self, client_wrapper: TelegramClientWrapper, dispatcher) -> None:
         self._client_wrapper = client_wrapper
         self._dispatcher = dispatcher
         self._client = client_wrapper.get_client()
+        self._running = True
 
     def register_handlers(self) -> None:
         self._client.add_event_handler(
@@ -50,5 +31,20 @@ class TelegramEventAdapter:
 
     def start(self) -> None:
         self.register_handlers()
-        self._client_wrapper.start()
-        self._client.run_until_disconnected()
+        while self._running:
+            try:
+                logger.info("正在连接 Telegram...")
+                self._client_wrapper.start()
+                logger.info("连接成功，开始监听消息...")
+                self._client.run_until_disconnected()
+            except (ConnectionError, OSError) as e:
+                logger.warning(f"连接断开: {e}, 10秒后重试...")
+                AUDIO_HANDLER.play_audio(sound_file=setting.alert_sound_file, volume=0.2, loop=1)
+                time.sleep(10)
+            except KeyboardInterrupt:
+                logger.info("收到中断信号，停止运行")
+                self._running = False
+                break
+            except Exception as e:
+                logger.error(f"发生异常: {e}, 10秒后重试...")
+                time.sleep(10)
