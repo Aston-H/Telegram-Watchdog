@@ -36,3 +36,6 @@ class Settings(BaseSettings):
     alert_sound_file: str = "app/config/music.mp3"
     alert_delay_seconds: float = 30.0
     alert_expire_seconds: float = 300.0
+
+    # 群组过滤配置
+    filtered_chat_ids: List[int] = [-5025130764]

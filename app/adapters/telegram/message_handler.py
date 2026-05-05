@@ -45,7 +45,7 @@ class TelegramMessageAdapter:
                       
 
         text = getattr(event.message, "message", "")
-        textstrip = text.strip()
+        textstrip = text.strip() if text else ""
         command, _, args = (textstrip.partition(" ") if textstrip.startswith("/") else (None, "", None))
 
 
